@@ -6,10 +6,9 @@ pub trait AdbClient {
 }
 
 pub struct RustAdbClient;
+
 impl AdbClient for RustAdbClient {
     fn adb_pair(&self, address: &str, code: u32) -> Result<(), ()> {
-        let mut server = adb_client::ADBServer::default();
-
         let ipv4 = match address.parse::<SocketAddrV4>() {
             Ok(add) => add,
             Err(e) => {
@@ -18,6 +17,8 @@ impl AdbClient for RustAdbClient {
                 return Err(());
             }
         };
+
+        let mut server = adb_client::ADBServer::default();
 
         match server.pair(ipv4, code) {
             Ok(_ok) => {
@@ -45,7 +46,6 @@ impl AdbClient for RustAdbClient {
         };
 
         let mut server = adb_client::ADBServer::default();
-
         match server.connect_device(ipv4) {
             Ok(_ok) => {
                 log::info!("Connected Device address: {address}");
