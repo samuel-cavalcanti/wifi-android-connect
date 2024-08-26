@@ -2,33 +2,51 @@ mod adb_device_authentication;
 mod adb_zero_conf;
 mod client;
 
-use std::cell::RefCell;
 use std::rc::Rc;
+use std::cell::RefCell;
 
 use adb_device_authentication::{AdbDeviceAuthentication, AdbService};
 use adb_zero_conf::AdbZeroConf;
 use client::RustAdbClient;
 use qrcode::{render::unicode, QrCode};
+use rand::Rng;
 
 fn wifi_connect_msg(name: &str, pair_code: u32) -> String {
+    assert!(
+        (100_000..999_999).contains(&pair_code),
+        "Should be a 6 digits number"
+    );
     format!(
-        "WIFI:T:ADB;S:{hostname};P:{password:0>6};;",
+        "WIFI:T:ADB;S:{hostname};P:{password};;",
         hostname = name,
         password = pair_code
     )
 }
 
 #[test]
-fn test_wifi_msg() {
-    let msg = wifi_connect_msg("connectAndroid", 5);
+#[should_panic]
+fn test_wifi_msg_1_digit() {
+    let _msg = wifi_connect_msg("connectAndroid", 5);
+}
 
-    assert_eq!(msg, "WIFI:T:ADB;S:connectAndroid;P:000005;;");
+#[test]
+#[should_panic]
+fn test_wifi_msg_5_digits() {
+    let _msg = wifi_connect_msg("connectAndroid", 12345);
+}
 
+#[test]
+fn test_wifi_msg_6_digit() {
     let msg = wifi_connect_msg("connectAndroid", 765912);
     assert_eq!(msg, "WIFI:T:ADB;S:connectAndroid;P:765912;;");
+    let msg = wifi_connect_msg("connect Android", 123456);
+    assert_eq!(msg, "WIFI:T:ADB;S:connect Android;P:123456;;");
+}
 
-    let msg = wifi_connect_msg("debug", 912);
-    assert_eq!(msg, "WIFI:T:ADB;S:debug;P:000912;;");
+#[test]
+#[should_panic]
+fn test_wifi_msg_7_digits() {
+    let _msg = wifi_connect_msg("connectAndroid", 1234567);
 }
 
 fn generate_qrcode_img(data: String) -> String {
@@ -39,8 +57,8 @@ fn generate_qrcode_img(data: String) -> String {
         .build()
 }
 
-fn random_pair_code() -> u32 {
-    rand::random::<u32>() % 1_000_000
+fn random_6_digits_pair_code() -> u32 {
+    rand::thread_rng().gen_range(100_000..999_999)
 }
 
 fn on_pair(auth: Rc<RefCell<AdbDeviceAuthentication>>) -> impl Fn(AdbService) {
@@ -61,7 +79,7 @@ fn on_connect(auth: Rc<RefCell<AdbDeviceAuthentication>>) -> impl Fn(AdbService)
 fn main() {
     env_logger::init();
 
-    let (pair_name, pair_code) = ("connectAndroid", random_pair_code());
+    let (pair_name, pair_code) = ("WIFI Android Connect", random_6_digits_pair_code());
     let auth = AdbDeviceAuthentication::new(pair_code, pair_name.to_string());
     let auth = RefCell::new(auth);
     let auth = Rc::new(auth);

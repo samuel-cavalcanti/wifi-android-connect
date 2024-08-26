@@ -53,7 +53,6 @@ version = "0.1.0"
 dependencies = [
  "adb_client",
  "env_logger",
- "lazy_static",
  "log",
  "qrcode",
  "rand",
