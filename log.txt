@@ -1,0 +1,27 @@
+   Compiling android-connect v0.1.0 (/home/samuel/Repositories/random/android-connect)
+    Finished `release` profile [optimized] target(s) in 1.04s
+     Running `target/release/android-connect`
+pair code: 072079
+█████████████████████████████████████
+█████████████████████████████████████
+████ ▄▄▄▄▄ ███▄▄█ ▀▀▄█▄█ █ ▄▄▄▄▄ ████
+████ █   █ ██ ▄ █ ▀▀▄██▀ █ █   █ ████
+████ █▄▄▄█ █▀▀▄ █  █▄█▄█▄█ █▄▄▄█ ████
+████▄▄▄▄▄▄▄█▄█ █ █ █▄▀ ▀▄█▄▄▄▄▄▄▄████
+████▄▀▀▄█ ▄█▄ ██▄█▀ █ ▄█  ▀▄▀███▀████
+████▀▀▄█ ▀▄▄█▄██▀█▀▀▄▀ ▄▄ ▀▀█▄▀▄ ████
+████ ▄█▀▀ ▄█▀▄   ██▀▄▀▄█▀▄ ▀▀ ▀▀█████
+████▀ ▄███▄ █▀█▄▄▀▀▄ ▄██ ▄ ▀█▀▄▄▄████
+█████▀ ▀ ▀▄█ █▄█ ▄▄ ██▄▄ ▄▀▄█▀▀ ▀████
+████▄█▄▀ █▄█ ▀███ █▀ ▀ ▀ ▀▄▄▄▀██▄████
+████▄█████▄█ ▄ ▀▀▀▄▀ █ █ ▄▄▄ ▄███████
+████ ▄▄▄▄▄ █▀█ ▀  ▄▄▀█▀▄ █▄█ ▄ ▄█████
+████ █   █ █▀ ▀▄█▀  ▄▀▄█ ▄▄▄ █▄  ████
+████ █▄▄▄█ ████ ▄▀▀▄ ▄▄ █▄▄▄▀█▀▀ ████
+████▄▄▄▄▄▄▄█▄█▄▄▄██▄██▄█▄█▄█▄████████
+█████████████████████████████████████
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+[2024-08-26T00:41:59Z DEBUG zeroconf::avahi::browser] Browsing services: AvahiMdnsBrowser { context: AvahiBrowserContext { resolvers: ServiceResolverSet { resolvers: {} } }, client: None, poll: None }
+[2024-08-26T00:41:59Z DEBUG zeroconf::avahi::browser] Browsing services: AvahiMdnsBrowser { context: AvahiBrowserContext { resolvers: ServiceResolverSet { resolvers: {} } }, client: None, poll: None }
+[2024-08-26T00:42:04Z ERROR android_connect] Error on discovery service failed to resolve service `adb-wg858hj7t849helj-si5LWZ` of type `_adb-tls-connect._tcp` in domain `local`
+[2024-08-26T00:42:04Z ERROR android_connect] Error on discovery service failed to resolve service `adb-wg858hj7t849helj-si5LWZ` of type `_adb-tls-connect._tcp` in domain `local`
