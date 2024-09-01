@@ -1668,6 +1668,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "wifi-android-connect-neovim"
+version = "0.1.0"
+
+[[package]]
 name = "windows"
 version = "0.57.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
