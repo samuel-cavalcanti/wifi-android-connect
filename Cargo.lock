@@ -48,18 +48,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4aa90d7ce82d4be67b64039a3d588d38dbcc6736577de4a847025ce5b0c468d1"
 
 [[package]]
-name = "android-connect"
-version = "0.1.0"
-dependencies = [
- "adb_client",
- "env_logger",
- "log",
- "qrcode",
- "rand",
- "zeroconf",
-]
-
-[[package]]
 name = "android-tzdata"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1611,6 +1599,18 @@ name = "widestring"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7219d36b6eac893fa81e84ebe06485e7dcbb616177469b142df14f1f4deb1311"
+
+[[package]]
+name = "wifi-android-connect"
+version = "0.1.0"
+dependencies = [
+ "adb_client",
+ "env_logger",
+ "log",
+ "qrcode",
+ "rand",
+ "zeroconf",
+]
 
 [[package]]
 name = "windows"

@@ -1,5 +1,5 @@
 [package]
-name = "android-connect"
+name = "wifi-android-connect"
 version = "0.1.0"
 edition = "2021"
 

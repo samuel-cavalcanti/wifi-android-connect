@@ -2,8 +2,8 @@ mod adb_device_authentication;
 mod adb_zero_conf;
 mod client;
 
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 use adb_device_authentication::{AdbDeviceAuthentication, AdbService};
 use adb_zero_conf::AdbZeroConf;
