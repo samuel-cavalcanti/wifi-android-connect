@@ -1059,6 +1059,65 @@ dependencies = [
 ]
 
 [[package]]
+name = "nvim-oxi"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "13587f8434641462a0674bc575fb1ca88d66827118470df3c2608e769fc8e3ee"
+dependencies = [
+ "nvim-oxi-api",
+ "nvim-oxi-luajit",
+ "nvim-oxi-macros",
+ "nvim-oxi-types",
+ "thiserror",
+]
+
+[[package]]
+name = "nvim-oxi-api"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0926b8fac04e376a743a7519382ef21c9d6e3ef584338d439972b911e5d85554"
+dependencies = [
+ "nvim-oxi-luajit",
+ "nvim-oxi-macros",
+ "nvim-oxi-types",
+ "serde",
+ "serde_repr",
+ "thiserror",
+]
+
+[[package]]
+name = "nvim-oxi-luajit"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3d83bb0ca6908c82bad8b22379f7577d0d82aa050601c0dce15d7c691c2131a"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
+name = "nvim-oxi-macros"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0db91ed44967f43c9ac9f80ce629391f53787aac6212aac79966422940671f9"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.76",
+]
+
+[[package]]
+name = "nvim-oxi-types"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c2545fa96873e7bc0bd12e1e68582a89ca593fad872e996e479a8615ae986424"
+dependencies = [
+ "libc",
+ "nvim-oxi-luajit",
+ "serde",
+ "thiserror",
+]
+
+[[package]]
 name = "once_cell"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1354,6 +1413,17 @@ name = "serde_derive"
 version = "1.0.209"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a5831b979fd7b5439637af1752d535ff49f4860c0f341d1baeb6faf0f4242170"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.76",
+]
+
+[[package]]
+name = "serde_repr"
+version = "0.1.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c64451ba24fc7a6a2d60fc75dd9c83c90903b19028d4eff35e88fc1e86564e9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1670,6 +1740,9 @@ dependencies = [
 [[package]]
 name = "wifi-android-connect-neovim"
 version = "0.1.0"
+dependencies = [
+ "nvim-oxi",
+]
 
 [[package]]
 name = "windows"
