@@ -11,16 +11,15 @@ use client::RustAdbClient;
 use qrcode::{render::unicode, QrCode};
 use rand::Rng;
 
-fn wifi_connect_msg(name: &str, pair_code: u32) -> String {
-    assert!(
-        (100_000..999_999).contains(&pair_code),
-        "Should be a 6 digits number"
-    );
-    format!(
+fn wifi_connect_msg(name: &str, pair_code: u32) -> Result<String, String> {
+    if !(100_000..999_999).contains(&pair_code) {
+        return Err("Pair code should be a 6 digits number".into());
+    }
+    Ok(format!(
         "WIFI:T:ADB;S:{hostname};P:{password};;",
         hostname = name,
         password = pair_code
-    )
+    ))
 }
 
 fn generate_qrcode_img(data: String) -> String {
@@ -71,9 +70,9 @@ impl WifiAndroidConnect {
             pair_code,
         }
     }
-    pub fn qrcode_img(&self) -> String {
-        let code = wifi_connect_msg(&self.pair_name, self.pair_code);
-        generate_qrcode_img(code)
+    pub fn qrcode_img(&self) -> Result<String, String> {
+        let code = wifi_connect_msg(&self.pair_name, self.pair_code)?;
+        Ok(generate_qrcode_img(code))
     }
     pub fn connect(&self) -> Result<(), String> {
         let auth = AdbDeviceAuthentication::new(self.pair_code, self.pair_name.to_string());
@@ -103,28 +102,18 @@ mod tests {
     use super::*;
 
     #[test]
-    #[should_panic]
-    fn test_wifi_msg_1_digit() {
-        let _msg = wifi_connect_msg("connectAndroid", 5);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_wifi_msg_5_digits() {
-        let _msg = wifi_connect_msg("connectAndroid", 12345);
+    fn test_wifi_msg_wrong_digits() {
+        for code in [1, 12, 123, 1234, 12345, 1234567] {
+            let msg = wifi_connect_msg("connectAndroid", code);
+            assert!(msg.is_err())
+        }
     }
 
     #[test]
     fn test_wifi_msg_6_digit() {
-        let msg = wifi_connect_msg("connectAndroid", 765912);
+        let msg = wifi_connect_msg("connectAndroid", 765912).unwrap();
         assert_eq!(msg, "WIFI:T:ADB;S:connectAndroid;P:765912;;");
-        let msg = wifi_connect_msg("connect Android", 123456);
+        let msg = wifi_connect_msg("connect Android", 123456).unwrap();
         assert_eq!(msg, "WIFI:T:ADB;S:connect Android;P:123456;;");
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_wifi_msg_7_digits() {
-        let _msg = wifi_connect_msg("connectAndroid", 1234567);
     }
 }

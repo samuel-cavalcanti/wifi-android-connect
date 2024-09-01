@@ -1,5 +1,5 @@
 [package]
-name = "wifi-android-connect-cli"
+name = "wifi-android-connect"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,3 +7,5 @@ edition = "2021"
 wifi-android-connect-lib = { path = "../wifi-android-connect-lib" }
 
 env_logger = "0.11.5"
+clap = { version = "4.5.16", features = ["derive"] }
+log = "0.4.22"
