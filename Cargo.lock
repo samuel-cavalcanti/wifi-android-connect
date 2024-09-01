@@ -1742,6 +1742,8 @@ name = "wifi-android-connect-neovim"
 version = "0.1.0"
 dependencies = [
  "nvim-oxi",
+ "serde",
+ "wifi-android-connect-lib",
 ]
 
 [[package]]
