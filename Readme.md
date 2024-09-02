@@ -14,6 +14,15 @@ cargo t
 cargo r
 ```
 
+
+## build NVIM plugin
+
+```bash
+
+chmod +x ./build.sh
+./build.sh
+```
+
 ## Example
 
 https://github.com/user-attachments/assets/d62e718b-e43d-45ee-a279-208ca997c791
