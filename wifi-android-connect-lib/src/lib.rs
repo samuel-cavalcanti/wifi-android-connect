@@ -79,6 +79,8 @@ impl WifiAndroidConnect {
         let auth = RefCell::new(auth);
         let auth = Rc::new(auth);
 
+        log::trace!("waiting {auth:?}");
+
         let zeroconf = AdbZeroConf::new(
             Box::new(on_pair(auth.clone())),
             Box::new(on_connect(auth.clone())),

@@ -66,7 +66,7 @@ impl AdbDeviceAuthentication {
 
     pub fn on_pair<C: AdbClient>(&mut self, service: &AdbService, client: &C) {
         if let AdbConnectionState::Unpaired(name, pair_code) = &self.state {
-            if name != service.name.as_str() || Self::is_not_local(&service.domain) {
+            if !name.contains(service.name.as_str()) || Self::is_not_local(&service.domain) {
                 log::trace!(
                     "service has different name or domain, service: {service:?} auth: {self:?}"
                 );

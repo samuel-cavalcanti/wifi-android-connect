@@ -1,14 +1,18 @@
 [package]
-name = "wifi-android-connect-neovim"
+name = "wifi-android-connect-nvim"
 version = "0.1.0"
 edition = "2021"
-crate-type = ["cdylib"]
+
+[lib]
+crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-nvim-oxi = { version = "0.5.1", features = ["neovim-0-10"] }
+nvim-oxi = { version = "0.5.1", features = ["libuv", "neovim-0-10"] }
 serde = { version = "1.0.209", features = ["derive"] }
+tokio = { version = "1.40.0", features = ["rt-multi-thread"] }
 wifi-android-connect-lib = { path = "../wifi-android-connect-lib" }
-
+env_logger = "0.11.5"
+log = "0.4.22"
 
 [target.x86_64-apple-darwin]
 rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
