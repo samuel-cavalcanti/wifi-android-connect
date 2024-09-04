@@ -2,6 +2,7 @@ use std::{
     cell::RefCell,
     rc::Rc,
     sync::{mpsc, Arc, OnceLock},
+    time::Duration,
 };
 
 use nvim_oxi::{
@@ -13,9 +14,23 @@ use nvim_oxi::{
 use serde::{Deserialize, Serialize};
 use wifi_android_connect_lib::WifiAndroidConnect;
 
+struct WifiAndroidConnectPlugin {
+    conn: WifiAndroidConnect,
+    timeout: u64,
+}
+
+impl Default for WifiAndroidConnectPlugin {
+    fn default() -> Self {
+        Self {
+            conn: Default::default(),
+            timeout: 5,
+        }
+    }
+}
+
 #[nvim_oxi::plugin]
 fn libwifi_android_connect_nvim() -> Dictionary {
-    let conn = wifi_android_connect_lib::WifiAndroidConnect::default();
+    let conn = WifiAndroidConnectPlugin::default();
     let conn = RefCell::new(conn);
     let conn = Rc::new(conn);
 
@@ -32,22 +47,26 @@ fn libwifi_android_connect_nvim() -> Dictionary {
     ])
 }
 
-fn setup(conn: Rc<RefCell<WifiAndroidConnect>>) -> impl Fn(Setup) {
+fn setup(conn: Rc<RefCell<WifiAndroidConnectPlugin>>) -> impl Fn(Setup) {
     move |setup| {
-        let mut conn = (*conn).borrow_mut();
+        let mut plugin = (*conn).borrow_mut();
+
         if let Some(pair_code) = setup.pair_code {
-            conn.pair_code = pair_code
+            plugin.conn.pair_code = pair_code
         }
 
         if let Some(pair_name) = setup.pair_name {
-            conn.pair_name = pair_name
+            plugin.conn.pair_name = pair_name
+        }
+        if let Some(timeout) = setup.timeout_in_minutes {
+            plugin.timeout = timeout;
         }
     }
 }
 // using for tests..
-fn qrcode(conn: Rc<RefCell<WifiAndroidConnect>>) -> impl Fn(()) -> String {
+fn qrcode(conn: Rc<RefCell<WifiAndroidConnectPlugin>>) -> impl Fn(()) -> String {
     move |()| {
-        let conn = (*conn).borrow_mut();
+        let conn = &mut (*conn).borrow_mut().conn;
 
         match conn.qrcode_img() {
             Ok(qrcode_img) => qrcode_img,
@@ -55,17 +74,21 @@ fn qrcode(conn: Rc<RefCell<WifiAndroidConnect>>) -> impl Fn(()) -> String {
         }
     }
 }
-fn connect(conn: WifiAndroidConnect) -> impl Fn(Function<String, ()>) -> String {
-    let conn = Arc::new(conn);
+fn connect(plugin: WifiAndroidConnectPlugin) -> impl Fn(Function<String, ()>) -> String {
+    let plugin = Arc::new(plugin);
 
-    log::trace!("pair name {} code {}", conn.pair_name, conn.pair_code);
+    log::trace!(
+        "pair name {} code {}",
+        plugin.conn.pair_name,
+        plugin.conn.pair_code
+    );
     static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
 
     let runtime = RUNTIME.get_or_init(|| tokio::runtime::Runtime::new().unwrap());
 
     move |calback| {
-        let conn = conn.clone();
-        let qrcode = conn.qrcode_img().unwrap();
+        let plugin = plugin.clone();
+        let qrcode = plugin.conn.qrcode_img().unwrap();
 
         let (tx, rx) = mpsc::channel::<String>();
 
@@ -76,10 +99,19 @@ fn connect(conn: WifiAndroidConnect) -> impl Fn(Function<String, ()>) -> String 
         .unwrap();
 
         runtime.spawn(async move {
-            let msg = match conn.connect() {
-                Ok(_) => "Connected".into(),
-                Err(e) => e,
+            let timeout = tokio::time::timeout(Duration::from_secs(plugin.timeout * 60), async {
+                plugin.conn.connect()
+            })
+            .await;
+
+            let msg = match timeout {
+                Ok(connect_result) => match connect_result {
+                    Ok(_) => "Connected".into(),
+                    Err(e) => e,
+                },
+                Err(_) => "Timeout".into(),
             };
+
             tx.send(msg).unwrap();
             handle.send().unwrap();
         });
@@ -92,6 +124,7 @@ fn connect(conn: WifiAndroidConnect) -> impl Fn(Function<String, ()>) -> String 
 struct Setup {
     pair_name: Option<String>,
     pair_code: Option<u32>,
+    timeout_in_minutes: Option<u64>,
 }
 
 impl FromObject for Setup {
