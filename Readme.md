@@ -1,5 +1,7 @@
 # WIFI Android connect
 
+OS Support: **Linux only**
+
 Connect to your device using QR code through the terminal
 
 ## run tests
