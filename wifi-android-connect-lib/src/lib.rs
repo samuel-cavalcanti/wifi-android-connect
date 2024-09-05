@@ -9,7 +9,7 @@ use adb_device_authentication::AdbDeviceAuthentication;
 use adb_mdns_discovery_service::AdbMDnsDiscoveryService;
 use adb_zero_conf::AdbZeroConf;
 use adb_zero_conf_mdns_sd::AdbMdns;
-use client::RustAdbClient;
+use client::{AdbClient, RustAdbClient};
 use qrcode::{render::unicode, QrCode};
 use rand::Rng;
 
@@ -62,29 +62,58 @@ impl WifiAndroidConnect {
         Ok(generate_qrcode_img(code))
     }
     pub fn connect(&self) -> Result<(), String> {
-        let mdns =  AdbMdns::new()?;
+        let mdns = AdbZeroConf::new();
         let mut auth = AdbDeviceAuthentication::new(self.pair_code, self.pair_name.clone());
 
         mdns.start()?;
         let client = RustAdbClient;
 
         loop {
-            let pair_set = mdns.adb_tls_pairing();
-            let connect_set = mdns.adb_tls_connect();
-
-            for service in &pair_set {
-                log::trace!("on pair {auth:?} {service:?}");
-                auth.on_pair(service, &client);
-            }
-
-            for service in &connect_set {
-                log::trace!("on connect {auth:?} {service:?}");
-                auth.on_connect(service, &client);
-            }
-
-            if auth.is_connected() {
+            if self.iter(&mut auth, &mdns, &client) {
                 break;
             }
+        }
+
+        mdns.stop()?;
+
+        Ok(())
+    }
+
+    fn iter(
+        &self,
+        auth: &mut AdbDeviceAuthentication,
+        mdns: &impl AdbMDnsDiscoveryService,
+        client: &impl AdbClient,
+    ) -> bool {
+        let pair_set = mdns.adb_tls_pairing();
+        let connect_set = mdns.adb_tls_connect();
+
+        for service in &pair_set {
+            log::trace!("on pair {auth:?} {service:?}");
+            auth.on_pair(service, client);
+        }
+
+        for service in &connect_set {
+            log::trace!("on connect {auth:?} {service:?}");
+            auth.on_connect(service, client);
+        }
+
+        auth.is_connected()
+    }
+
+    #[cfg(feature = "tokio")]
+    pub async fn async_connect(&self) -> Result<(), String> {
+        let mdns = AdbMdns::new()?;
+        let mut auth = AdbDeviceAuthentication::new(self.pair_code, self.pair_name.clone());
+
+        mdns.start()?;
+        let client = RustAdbClient;
+
+        loop {
+            if self.iter(&mut auth, &mdns, &client) {
+                break;
+            }
+            tokio::task::yield_now().await;
         }
 
         mdns.stop()?;

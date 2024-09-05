@@ -1,11 +1,10 @@
 local ffi_lib = require("libwifi_android_connect_nvim")
-local utils = require("utils")
 
 local function setup(opts)
         local default_ops = {
                 pair_code = nil,
                 pair_name = "WIFI Android Connect nvim",
-                timeout_in_minutes = 5
+                timeout_in_seconds = 5
         }
         opts = opts or default_ops
         ffi_lib.setup(opts)

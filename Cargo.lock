@@ -1879,6 +1879,7 @@ dependencies = [
  "mdns-sd",
  "qrcode",
  "rand",
+ "tokio",
  "zeroconf",
 ]
 

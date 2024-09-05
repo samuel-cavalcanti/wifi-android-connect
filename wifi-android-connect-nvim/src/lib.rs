@@ -58,7 +58,7 @@ fn setup(conn: Rc<RefCell<WifiAndroidConnectPlugin>>) -> impl Fn(Setup) {
         if let Some(pair_name) = setup.pair_name {
             plugin.conn.pair_name = pair_name
         }
-        if let Some(timeout) = setup.timeout_in_minutes {
+        if let Some(timeout) = setup.timeout_in_seconds {
             plugin.timeout = timeout;
         }
     }
@@ -99,8 +99,8 @@ fn connect(plugin: WifiAndroidConnectPlugin) -> impl Fn(Function<String, ()>) ->
         .unwrap();
 
         runtime.spawn(async move {
-            let timeout = tokio::time::timeout(Duration::from_secs(plugin.timeout * 60), async {
-                plugin.conn.connect()
+            let timeout = tokio::time::timeout(Duration::from_secs(plugin.timeout), async {
+                plugin.conn.async_connect().await
             })
             .await;
 
@@ -124,7 +124,7 @@ fn connect(plugin: WifiAndroidConnectPlugin) -> impl Fn(Function<String, ()>) ->
 struct Setup {
     pair_name: Option<String>,
     pair_code: Option<u32>,
-    timeout_in_minutes: Option<u64>,
+    timeout_in_seconds: Option<u64>,
 }
 
 impl FromObject for Setup {
