@@ -4,7 +4,7 @@ local function setup(opts)
         local default_ops = {
                 pair_code = nil,
                 pair_name = "WIFI Android Connect nvim",
-                timeout_in_seconds = 5
+                timeout_in_seconds = 30
         }
         opts = opts or default_ops
         ffi_lib.setup(opts)
