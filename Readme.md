@@ -1,10 +1,13 @@
-# WIFI Android connect
+
+
+# <img src="https://github.com/user-attachments/assets/8039cbdc-8bec-487d-8dae-0448d8575f0b" width="30"/>  WIFI Android connect 
 
 OS Support:
 
 - **Linux only**
 - **maybe** works for macos
 - **maybe** works for windows
+
 
 Connect to your device using QR code through the terminal (or neovim)
 
