@@ -1,6 +1,10 @@
 # WIFI Android connect
 
-OS Support: **Linux only**
+OS Support:
+
+- **Linux only**
+- **maybe** works for macos
+- **maybe** works for windows
 
 Connect to your device using QR code through the terminal (or neovim)
 
@@ -39,6 +43,15 @@ with lazy.nvim:
     'samuel-cavalcanti/wifi-android-connect'
 
 },
+```
+
+Default setup
+
+```lua
+local WIFI_QR_code = require("wifi-android-connect")
+WIFI_QR_code.setup {
+        timeout_in_seconds = 30
+}
 ```
 
 ![](./docs/nvim_example.png)
