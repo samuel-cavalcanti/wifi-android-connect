@@ -1,7 +1,7 @@
 use std::{
     cell::RefCell,
     rc::Rc,
-    sync::{mpsc, Arc, OnceLock},
+    sync::{mpsc, OnceLock},
     time::Duration,
 };
 
@@ -14,31 +14,16 @@ use nvim_oxi::{
 use serde::{Deserialize, Serialize};
 use wifi_android_connect_lib::WifiAndroidConnect;
 
-struct WifiAndroidConnectPlugin {
-    conn: WifiAndroidConnect,
-    timeout: u64,
-}
-
-impl Default for WifiAndroidConnectPlugin {
-    fn default() -> Self {
-        Self {
-            conn: Default::default(),
-            timeout: 5,
-        }
-    }
-}
+const DEFAULT_TIMEOUT: u64 = 2 * 60;
 
 #[nvim_oxi::plugin]
 fn libwifi_android_connect_nvim() -> Dictionary {
-    let conn = WifiAndroidConnectPlugin::default();
-    let conn = RefCell::new(conn);
-    let conn = Rc::new(conn);
+    let s: Rc<RefCell<Setup>> = Default::default();
 
-    let qrcode_fun = Object::from(Function::from_fn(qrcode(conn.clone())));
-    let setup_fun = Object::from(Function::from_fn(setup(conn.clone())));
+    let qrcode_fun = Object::from(Function::from_fn(qrcode(s.clone())));
+    let setup_fun = Object::from(Function::from_fn(setup(s.clone())));
 
-    let conn = (*conn).take();
-    let connect_fun = Object::from(Function::from_fn(connect(conn)));
+    let connect_fun = Object::from(Function::from_fn(connect(s)));
 
     Dictionary::from_iter([
         ("setup", setup_fun),
@@ -47,26 +32,16 @@ fn libwifi_android_connect_nvim() -> Dictionary {
     ])
 }
 
-fn setup(conn: Rc<RefCell<WifiAndroidConnectPlugin>>) -> impl Fn(Setup) {
-    move |setup| {
-        let mut plugin = (*conn).borrow_mut();
-
-        if let Some(pair_code) = setup.pair_code {
-            plugin.conn.pair_code = pair_code
-        }
-
-        if let Some(pair_name) = setup.pair_name {
-            plugin.conn.pair_name = pair_name
-        }
-        if let Some(timeout) = setup.timeout_in_seconds {
-            plugin.timeout = timeout;
-        }
+fn setup(s: Rc<RefCell<Setup>>) -> impl Fn(Setup) {
+    move |setup_user| {
+        *(*s).borrow_mut() = setup_user;
     }
 }
 // using for tests..
-fn qrcode(conn: Rc<RefCell<WifiAndroidConnectPlugin>>) -> impl Fn(()) -> String {
+fn qrcode(s: Rc<RefCell<Setup>>) -> impl Fn(()) -> String {
     move |()| {
-        let conn = &mut (*conn).borrow_mut().conn;
+        let setup = &*(*s).borrow_mut();
+        let conn = WifiAndroidConnect::from(setup);
 
         match conn.qrcode_img() {
             Ok(qrcode_img) => qrcode_img,
@@ -74,21 +49,16 @@ fn qrcode(conn: Rc<RefCell<WifiAndroidConnectPlugin>>) -> impl Fn(()) -> String 
         }
     }
 }
-fn connect(plugin: WifiAndroidConnectPlugin) -> impl Fn(Function<String, ()>) -> String {
-    let plugin = Arc::new(plugin);
-
-    log::trace!(
-        "pair name {} code {}",
-        plugin.conn.pair_name,
-        plugin.conn.pair_code
-    );
+fn connect(setup: Rc<RefCell<Setup>>) -> impl Fn(Function<String, ()>) -> String {
     static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
 
     let runtime = RUNTIME.get_or_init(|| tokio::runtime::Runtime::new().unwrap());
 
     move |calback| {
-        let plugin = plugin.clone();
-        let qrcode = plugin.conn.qrcode_img().unwrap();
+        let setup = &*(*setup).borrow_mut();
+        let conn = WifiAndroidConnect::from(setup);
+        let timeout = setup.timeout_in_seconds.unwrap_or(DEFAULT_TIMEOUT);
+        let qrcode = conn.qrcode_img().unwrap();
 
         let (tx, rx) = mpsc::channel::<String>();
 
@@ -99,8 +69,8 @@ fn connect(plugin: WifiAndroidConnectPlugin) -> impl Fn(Function<String, ()>) ->
         .unwrap();
 
         runtime.spawn(async move {
-            let timeout = tokio::time::timeout(Duration::from_secs(plugin.timeout), async {
-                plugin.conn.async_connect().await
+            let timeout = tokio::time::timeout(Duration::from_secs(timeout), async {
+                conn.async_connect().await
             })
             .await;
 
@@ -120,11 +90,49 @@ fn connect(plugin: WifiAndroidConnectPlugin) -> impl Fn(Function<String, ()>) ->
     }
 }
 
+impl From<Setup> for WifiAndroidConnect {
+    fn from(value: Setup) -> Self {
+        let mut conn = WifiAndroidConnect::default();
+        if let Some(code) = value.pair_code {
+            conn.pair_code = code;
+        }
+        if let Some(name) = value.pair_name {
+            conn.pair_name = name;
+        }
+
+        conn
+    }
+}
+
+impl From<&Setup> for WifiAndroidConnect {
+    fn from(value: &Setup) -> Self {
+        let mut conn = WifiAndroidConnect::default();
+        if let Some(code) = value.pair_code {
+            conn.pair_code = code;
+        }
+        if let Some(name) = &value.pair_name {
+            conn.pair_name = name.clone();
+        }
+
+        conn
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 struct Setup {
     pair_name: Option<String>,
     pair_code: Option<u32>,
     timeout_in_seconds: Option<u64>,
+}
+
+impl Default for Setup {
+    fn default() -> Self {
+        Self {
+            pair_code: None,
+            pair_name: None,
+            timeout_in_seconds: Some(DEFAULT_TIMEOUT),
+        }
+    }
 }
 
 impl FromObject for Setup {
