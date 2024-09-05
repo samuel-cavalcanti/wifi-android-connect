@@ -1,4 +1,5 @@
 mod adb_device_authentication;
+#[cfg(feature = "zeroconf")]
 mod adb_zero_conf;
 mod adb_zero_conf_mdns_sd;
 mod client;
