@@ -23,7 +23,7 @@ fn main() {
     let args = WifiAndroidConnectArgs::parse();
     if args.debug {
         env_logger::builder()
-            .filter_level(log::LevelFilter::Trace)
+            .filter_module("wifi_android_connect_lib:",log::LevelFilter::Trace )
             .init();
     }
 
