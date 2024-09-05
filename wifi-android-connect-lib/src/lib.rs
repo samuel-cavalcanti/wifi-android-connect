@@ -7,7 +7,6 @@ mod adb_mdns_discovery_service;
 
 use adb_device_authentication::AdbDeviceAuthentication;
 use adb_mdns_discovery_service::AdbMDnsDiscoveryService;
-use adb_zero_conf::AdbZeroConf;
 use adb_zero_conf_mdns_sd::AdbMdns;
 use client::{AdbClient, RustAdbClient};
 use qrcode::{render::unicode, QrCode};
@@ -62,7 +61,7 @@ impl WifiAndroidConnect {
         Ok(generate_qrcode_img(code))
     }
     pub fn connect(&self) -> Result<(), String> {
-        let mdns = AdbZeroConf::new();
+        let mdns = AdbMdns::new()?;
         let mut auth = AdbDeviceAuthentication::new(self.pair_code, self.pair_name.clone());
 
         mdns.start()?;
