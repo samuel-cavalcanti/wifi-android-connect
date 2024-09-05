@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use zeroconf::ServiceDiscovery;
-
 use crate::client::AdbClient;
 
 #[derive(Debug)]
@@ -17,30 +15,20 @@ pub struct AdbDeviceAuthentication {
     pub known_address: HashMap<String, String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub struct AdbService {
-    name: String,
-    ip: String,
-    port: u16,
-    domain: String,
+    pub name: String,
+    pub ip: String,
+    pub port: u16,
+    pub domain: String,
 }
+
 impl AdbService {
     pub fn address(&self) -> String {
         format!("{ip}:{port}", ip = self.ip, port = self.port)
     }
     pub fn ip(&self) -> &String {
         &self.ip
-    }
-}
-
-impl From<ServiceDiscovery> for AdbService {
-    fn from(value: ServiceDiscovery) -> Self {
-        AdbService {
-            name: value.name().into(),
-            ip: value.address().into(),
-            port: *value.port(),
-            domain: value.domain().into(),
-        }
     }
 }
 

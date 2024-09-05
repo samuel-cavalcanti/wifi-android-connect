@@ -1,12 +1,14 @@
 mod adb_device_authentication;
 mod adb_zero_conf;
+mod adb_zero_conf_mdns_sd;
 mod client;
 
-use std::cell::RefCell;
-use std::rc::Rc;
+mod adb_mdns_discovery_service;
 
-use adb_device_authentication::{AdbDeviceAuthentication, AdbService};
+use adb_device_authentication::AdbDeviceAuthentication;
+use adb_mdns_discovery_service::AdbMDnsDiscoveryService;
 use adb_zero_conf::AdbZeroConf;
+use adb_zero_conf_mdns_sd::AdbMdns;
 use client::RustAdbClient;
 use qrcode::{render::unicode, QrCode};
 use rand::Rng;
@@ -32,21 +34,6 @@ fn generate_qrcode_img(data: String) -> String {
 
 fn random_6_digits_pair_code() -> u32 {
     rand::thread_rng().gen_range(100_000..999_999)
-}
-
-fn on_pair(auth: Rc<RefCell<AdbDeviceAuthentication>>) -> impl Fn(AdbService) {
-    move |s| {
-        auth.borrow_mut().on_pair(&s, &RustAdbClient);
-        log::trace!("Auth state: {auth:?}");
-        log::trace!("service: {s:?}");
-    }
-}
-fn on_connect(auth: Rc<RefCell<AdbDeviceAuthentication>>) -> impl Fn(AdbService) {
-    move |s| {
-        auth.borrow_mut().on_connect(&s, &RustAdbClient);
-        log::trace!("Auth state: {auth:?}");
-        log::trace!("service: {s:?}");
-    }
 }
 
 pub struct WifiAndroidConnect {
@@ -75,27 +62,34 @@ impl WifiAndroidConnect {
         Ok(generate_qrcode_img(code))
     }
     pub fn connect(&self) -> Result<(), String> {
-        let auth = AdbDeviceAuthentication::new(self.pair_code, self.pair_name.to_string());
-        let auth = RefCell::new(auth);
-        let auth = Rc::new(auth);
+        let mdns =  AdbMdns::new()?;
+        let mut auth = AdbDeviceAuthentication::new(self.pair_code, self.pair_name.clone());
 
-        log::trace!("waiting {auth:?}");
-
-        let zeroconf = AdbZeroConf::new(
-            Box::new(on_pair(auth.clone())),
-            Box::new(on_connect(auth.clone())),
-        );
+        mdns.start()?;
+        let client = RustAdbClient;
 
         loop {
-            if let Err(e) = zeroconf.poll() {
-                log::error!("Poll error: {e:?}");
-                return Err(e.to_string());
+            let pair_set = mdns.adb_tls_pairing();
+            let connect_set = mdns.adb_tls_connect();
+
+            for service in &pair_set {
+                log::trace!("on pair {auth:?} {service:?}");
+                auth.on_pair(service, &client);
             }
 
-            if auth.borrow_mut().is_connected() {
-                return Ok(());
+            for service in &connect_set {
+                log::trace!("on connect {auth:?} {service:?}");
+                auth.on_connect(service, &client);
+            }
+
+            if auth.is_connected() {
+                break;
             }
         }
+
+        mdns.stop()?;
+
+        Ok(())
     }
 }
 
