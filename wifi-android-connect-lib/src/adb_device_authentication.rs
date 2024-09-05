@@ -54,7 +54,7 @@ impl AdbDeviceAuthentication {
 
     pub fn on_pair<C: AdbClient>(&mut self, service: &AdbService, client: &C) {
         if let AdbConnectionState::Unpaired(name, pair_code) = &self.state {
-            if !name.contains(service.name.as_str()) || Self::is_not_local(&service.domain) {
+            if !service.name.contains(name) || Self::is_not_local(&service.domain) {
                 log::trace!(
                     "service has different name or domain, service: {service:?} auth: {self:?}"
                 );
@@ -75,10 +75,17 @@ impl AdbDeviceAuthentication {
         if Self::is_not_local(&service.domain) {
             return;
         }
-        self.known_address
-            .insert(service.ip().to_string(), service.address());
 
-        self.connect(&service.address(), client)
+        if !self.known_address.contains_key(service.ip()) {
+            self.known_address
+                .insert(service.ip().to_string(), service.address());
+
+            self.connect(&service.address(), client)
+        }
+
+        if let AdbConnectionState::Paired = self.state {
+            self.connect(&service.address(), client);
+        }
     }
 
     pub fn get_address(&self, ip: &str) -> Option<String> {
@@ -89,7 +96,8 @@ impl AdbDeviceAuthentication {
 
 #[cfg(test)]
 mod tests {
-    use crate::client::AdbClient;
+
+    use crate::{adb_device_authentication::AdbConnectionState, client::AdbClient};
 
     use super::{AdbDeviceAuthentication, AdbService};
 
@@ -176,23 +184,29 @@ mod tests {
 
     #[test]
     fn test_on_pair_before_on_connect() {
-        let mut auth = AdbDeviceAuthentication::new(10, "test".into());
-        let pair_service = AdbService {
-            domain: "local".into(),
-            ip: "123.123.0.123".into(),
-            name: "test".into(),
-            port: 33001,
-        };
+        let mut auth = AdbDeviceAuthentication::new(10, "WIFI Android Connect".into());
 
-        let connect_service = AdbService {
+        let pair_service = AdbService {
+            name: "WIFI Android Connect._adb-tls-pairing._tcp.local.".into(),
+            ip: "192.168.0.197".into(),
+            port: 34317,
             domain: "local".into(),
-            ip: "123.123.0.123".into(),
-            name: "adb-wg858lj7t959helz-si5LWZ".into(),
-            port: 34003,
         };
 
         auth.on_pair(&pair_service, &SuccessMock);
-        assert!(!auth.is_connected());
+
+        if let AdbConnectionState::Paired = auth.state {
+            assert!(!auth.is_connected());
+        } else {
+            panic!("Auth should be paired at this time {auth:?}");
+        }
+
+        let connect_service = AdbService {
+            name: "adb-wg858lj7t959helz-si5LWZ._adb-tls-pairing._tcp.local.".into(),
+            ip: "192.168.0.197".into(),
+            port: 34317,
+            domain: "local".into(),
+        };
 
         auth.on_connect(&connect_service, &SuccessMock);
         assert!(auth.is_connected());
