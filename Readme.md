@@ -5,8 +5,8 @@
 OS Support:
 
 - **Linux only**
-- **maybe** works for macos
-- **maybe** works for windows
+- it **might** work for macos
+- it **might** work for windows
 
 
 Connect to your device using QR code through the terminal (or neovim)
