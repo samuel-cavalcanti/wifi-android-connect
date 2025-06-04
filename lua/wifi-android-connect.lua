@@ -56,7 +56,7 @@ local function show_qr_code(buffer_id, qrcode)
 
         vim.api.nvim_buf_set_lines(buffer_id, 0, -1, false, { centered_title, string.rep("_", window_dim.width) })
 
-       -- Append the qrcode.
+        -- Append the qrcode.
         vim.api.nvim_buf_set_lines(buffer_id, -1, -1, true, lines)
 
         -- Make readonly again.
@@ -71,17 +71,24 @@ local function show_qr_code(buffer_id, qrcode)
         end
 end
 
+local function get_current_file_dir()
+        local str = debug.getinfo(1, "S").source:sub(2)
+        return vim.fn.fnamemodify(str, ":p:h")
+end
+
+
 local function connect()
         local qrcode_buffer = vim.api.nvim_create_buf(false, true)
         local completed = false
-        -- local ns = vim.api.nvim_create_namespace('process_output')
-        local job_id = vim.fn.jobstart("~/Repositories/random/wifi-android-connect/lua/wifi-android-connect", {
+        local current_dir = get_current_file_dir()
+        local bin_file = "wifi-android-connect"
+        local job_id = vim.fn.jobstart( current_dir .."/" .. bin_file, {
                 on_stdout = function(_, data)
                         if data then
                                 show_qr_code(qrcode_buffer, data)
                         end
                 end,
-                on_stderr = function(_, data)
+                on_stderr = function(_, _)
                         -- if data then
                         --         print('error:')
                         --         require('utils').print_table(data)
