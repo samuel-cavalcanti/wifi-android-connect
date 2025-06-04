@@ -14,6 +14,9 @@ end
 
 local function show_qr_code(buffer_id, qrcode)
         local lines = qrcode -- string_to_lines(qrcode)
+        if #lines *2 < 3 then
+                return
+        end
 
         local editor_dim = { width = vim.o.columns, height = vim.o.lines }
         local window_dim = { width = #lines * 2 - 3, height = #lines }
