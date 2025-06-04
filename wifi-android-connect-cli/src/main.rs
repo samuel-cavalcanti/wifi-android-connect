@@ -23,9 +23,10 @@ fn main() {
     let args = WifiAndroidConnectArgs::parse();
     if args.debug {
         env_logger::builder()
-            .filter_module("wifi_android_connect_lib:",log::LevelFilter::Trace )
+            .filter_module("wifi_android_connect_lib:", log::LevelFilter::Trace)
             .init();
     }
+
 
     let mut con = WifiAndroidConnect::default();
 
@@ -46,7 +47,7 @@ fn main() {
     match con.qrcode_img() {
         Ok(img) => println!("{img}"),
         Err(msg) => {
-            println!("ERROR: {msg}");
+            eprintln!("ERROR: {msg}");
             return;
         }
     }
@@ -55,6 +56,6 @@ fn main() {
         Ok(_) => {
             println!("Connected")
         }
-        Err(e) => println!("ERROR: {e}"),
+        Err(e) => eprintln!("ERROR: {e}"),
     }
 }
